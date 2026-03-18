@@ -16,4 +16,10 @@
         <version>@INDI_QHY_VERSION_MAJOR@.@INDI_QHY_VERSION_MINOR@</version>
     </device>
 </devGroup>
+<devGroup group="Telescopes">
+    <device label="QHY Mount" manufacturer="QHY">
+        <driver name="QHY Mount">indi_qhy_mount</driver>
+        <version>@INDI_QHY_VERSION_MAJOR@.@INDI_QHY_VERSION_MINOR@</version>
+    </device>
+</devGroup>
 </driversList>
