@@ -12,6 +12,7 @@ find_package(ZLIB REQUIRED)
 find_package(Nova REQUIRED)
 find_package(USB1 REQUIRED)
 find_package(Threads REQUIRED)
+find_package(GSL REQUIRED)
 
 if(INDI_JSONLIB)
     set(JSONLIB "")
@@ -36,8 +37,9 @@ include_directories( ${CFITSIO_INCLUDE_DIR})
 include_directories( ${QHY_INCLUDE_DIR})
 include_directories( ${USB1_INCLUDE_DIRS})
 include_directories( ${NOVA_INCLUDE_DIRS})
+include_directories( ${GSL_INCLUDE_DIR})
 
-add_definitions(-DCALLBACK_MODE_SUPPORT)
+add_definitions(-DCALLBACK_MODE_SUPPORT -D__CPP_MODE__)
 
 include(CMakeCommon)
 
@@ -67,6 +69,10 @@ endif()
 install(TARGETS indi_qhy_ccd RUNTIME DESTINATION bin )
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/indi_qhy.xml DESTINATION ${INDI_DATA_DIR})
+install(FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/eqmod/indi_qhy_eqmod_sk.xml
+    ${CMAKE_CURRENT_SOURCE_DIR}/eqmod/simulator/indi_eqmod_simulator_sk.xml
+    DESTINATION ${INDI_DATA_DIR})
 
 ########### qhy_test_ccd ###########
 add_executable(qhy_ccd_test ${CMAKE_CURRENT_SOURCE_DIR}/qhy_ccd_test.cpp)
@@ -94,3 +100,28 @@ IF (${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD")
 endif()
 
 install(TARGETS indi_qhy_focuser RUNTIME DESTINATION bin )
+
+########### qhy_mount ###########
+set(qhy_mount_CXX_SRCS
+   ${CMAKE_CURRENT_SOURCE_DIR}/qhy_mount.cpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/qhy_mount_base.cpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/eqmod/eqmodbase.cpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/eqmod/eqmoderror.cpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/eqmod/skywatcher.cpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/eqmod/simulator/simulator.cpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/eqmod/simulator/skywatcher-simulator.cpp)
+
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  set(qhy_mount_CXX_SRCS ${qhy_mount_CXX_SRCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/eqmod/mach_gettime.cpp)
+endif()
+
+add_executable(indi_qhy_mount ${qhy_mount_CXX_SRCS})
+
+target_link_libraries(indi_qhy_mount ${INDI_LIBRARIES} ${NOVA_LIBRARIES} ${GSL_LIBRARIES} ${ZLIB_LIBRARY})
+
+IF (${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD")
+    target_link_libraries(indi_qhy_mount rt)
+endif()
+
+install(TARGETS indi_qhy_mount RUNTIME DESTINATION bin )
